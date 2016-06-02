@@ -2,43 +2,86 @@
  * New node file Snake Object
  */
 
-function Snake() {
+
+function Snake(length, scaleSize, color, speed, ctx) {
+  this.length = length;
+  this.scaleSize = scaleSize;
+  this.color = color;
+  this.speed = speed;
+  this.ctx = ctx;
 };
 Snake.prototype = {
-	Scale : function(x, y, size, color) {
+  length: '',
+  scaleSize: '',
+  color: '',
+  Scale: function(x, y) {
 
-		var color = color;
-		ctx.fillStyle = color;
-		ctx.fillRect(x, y,size,size);
-		ctx.fill();
-	},
-	animate : function(fn) {
-		window.requestAnimationFrame(fn);
-	},
-	
-	body : function(length,scaleSize,color,y,time) {
-		for(var i=0;i<=length;i++){
-			this.Scale(i*scaleSize+time,y,scaleSize-1,color);
-		}
-	}
+    this.ctx.fillStyle = this.color;
+    this.ctx.fillRect(x, y, this.scaleSize - 1, this.scaleSize);
+    this.ctx.fill();
+  },
+  animate: function(fn) {
+    window.requestAnimationFrame(fn);
+
+  },
+
+  body: function(x, y) {
+    for (var i = 0; i <= this.length; i++) {
+      if ((x + (i * this.scaleSize)) < this.ctx.canvas.width) {
+        this.Scale(x + (i * this.scaleSize), y);
+      } else {
+        this.Scale(this.ctx.canvas.width - (x + (i * this.scaleSize)), y);
+
+      }
+    }
+  }
 };
+
+function createSnake(canvas) {
+  var ctx = canvas.getContext('2d');
+  var snake = new Snake(4, 30, 'blue', 5, ctx);
+  var start = null;
+  var y = Math.random() * 500;
+  var step = function(timestamp) {
+    if (!start) start = timestamp;
+    var newX = (timestamp - start) / snake.speed;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+     if (newX > canvas.width) {
+       start = timestamp;
+     };
+    snake.body(newX, y);
+    //if ((snake.length + 5 * snake.scaleSize + newX) < canvas.width) {
+    snake.animate(step);
+
+  };
+  snake.animate(step);
+}
+
+function resize_canvas(canvas) {
+
+  if (canvas.width < window.innerWidth) {
+    canvas.width = window.innerWidth;
+  }
+  if (canvas.height < window.innerHeight) {
+    canvas.height = window.innerHeight;
+  }
+  createSnake(canvas);
+
+}
+
 $(document).ready(function() {
-	ctx = document.getElementById("canvas1").getContext('2d');
-	user =["darpan"];
-	user.forEach(createSnake);
-	
+  canvas = document.getElementById("canvas1");
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  user = ["darpan"];
+  //user.forEach(createSnake(canvas));
+  createSnake(canvas);
+});
+var socket = io();
+socket.on('broadcast', function(data) {
+  $('#message').text(data.message);
 });
 
-function createSnake(currentValue){
-	var me = new Snake();
-	var start =null;
-	var ran =Math.random()*500;
-	var meNow = function(timestamp) {
-		if (!start) start = timestamp;
-		  var progress = timestamp - start;
-		ctx.clearRect(0,0,500,500);
-		me.body(4,30,'blue',ran,progress/20);
-		window.requestAnimationFrame(meNow);
-	};
-	me.animate(meNow);
-}
+{
+  name: 'darpan'
+};
